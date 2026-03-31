@@ -22,6 +22,11 @@ export class IncidentsController {
     return this.incidentsService.findOne(id);
   }
 
+  @Get(':id/history')
+  getHistory(@Param('id') id: string) {
+    return this.incidentsService.getHistory(id);
+  }
+
   @Post()
   create(@Body() dto: Partial<Incident>) {
     return this.incidentsService.create(dto);
