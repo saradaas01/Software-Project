@@ -14,6 +14,9 @@ import { ReportAuditLogModule } from './report-audit-log/report-audit-log.module
 import { AlertSubscriptionsModule } from './alert-subscriptions/alert-subscriptions.module';
 import { AlertRecordsModule } from './alert-records/alert-records.module';
 import { RouteCacheModule } from './route-cache/route-cache.module';
+import { RoutModule } from './rout/rout.module';
+import { RoutesModule } from './routes/routes.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 @Module({
   imports: [
@@ -44,6 +47,9 @@ import { RouteCacheModule } from './route-cache/route-cache.module';
     AlertSubscriptionsModule,
     AlertRecordsModule,
     RouteCacheModule,
+    RoutModule,
+    RoutesModule,
+    IntegrationsModule,
   ],
   providers: [IncidentStatusHistorynpxService],
 })
