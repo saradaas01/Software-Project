@@ -21,6 +21,12 @@ import { AlertSubscription } from './alert-subscriptions/alert-subscription.enti
 import { AlertRecord } from './alert-records/alert-record.entity';
 import { RouteCache } from './route-cache/route-cache.entity';
 
+import { CheckpointsModule } from './checkpoints/checkpoints.module';
+import { IncidentStatusHistoryModule } from './incident-status-history/incident-status-history.module';
+import { CheckpointStatusHistoryModule } from './checkpoint-status-history/checkpoint-status-history.module';
+import { RoutesModule } from './routes/routes.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -56,6 +62,11 @@ import { RouteCache } from './route-cache/route-cache.entity';
     IncidentsModule,
     ReportsModule,
     ReportVotesModule,
+    CheckpointsModule,
+    IncidentStatusHistoryModule,
+    CheckpointStatusHistoryModule,
+    RoutesModule,
+    IntegrationsModule,
   ],
 })
 export class AppModule {}

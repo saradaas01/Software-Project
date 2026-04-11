@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Incident } from './incident.entity';
+import { IncidentStatusHistoryService } from '../incident-status-history/incident-status-history.service';
 
 @Injectable()
 export class IncidentsService {
   constructor(
     @InjectRepository(Incident)
     private incidentsRepository: Repository<Incident>,
+    private incidentStatusHistoryService: IncidentStatusHistoryService,
   ) {}
 
   async findAll(type?: string, severity?: string, status?: string, page = 1, limit = 10) {
@@ -33,7 +35,14 @@ export class IncidentsService {
   }
 
   async update(id: string, dto: Partial<Incident>) {
-    await this.findOne(id);
+    const old = await this.findOne(id);
+    if (dto.status && dto.status !== old.status) {
+      await this.incidentStatusHistoryService.create({
+        incident_id: id,
+        old_status: old.status,
+        new_status: dto.status,
+      });
+    }
     await this.incidentsRepository.update(id, dto);
     return this.findOne(id);
   }
@@ -42,5 +51,9 @@ export class IncidentsService {
     await this.findOne(id);
     await this.incidentsRepository.delete(id);
     return { message: 'Incident deleted successfully' };
+  }
+
+  async getHistory(incident_id: string) {
+    return await this.incidentStatusHistoryService.findByIncident(incident_id);
   }
 }
