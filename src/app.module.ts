@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { IncidentsModule } from './incidents/incidents.module';
+import { ReportsModule } from './reports/reports.module';
+import { ReportVotesModule } from './report-votes/report-votes.module';
 
 import { User } from './users/user.entity';
 import { RefreshToken } from './auth/refresh-token.entity';
@@ -52,6 +54,8 @@ import { RouteCache } from './route-cache/route-cache.entity';
     AuthModule,
     UsersModule,
     IncidentsModule,
+    ReportsModule,
+    ReportVotesModule,
   ],
 })
 export class AppModule {}

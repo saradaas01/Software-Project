@@ -3,17 +3,17 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeor
 @Entity('report_votes')
 export class ReportVote {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  report_id: string;
+  report_id!: string;
 
   @Column()
-  user_id: string;
+  user_id!: string;
 
   @Column({ type: 'smallint' })
-  vote: number;
+  vote!: number;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 }
