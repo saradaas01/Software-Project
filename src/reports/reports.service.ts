@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, MoreThanOrEqual, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Report } from './report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
 import { QueryReportsDto } from './dto/query-reports.dto';
@@ -8,46 +12,65 @@ import { ReportAuditLog } from '../report-audit-log/report-audit-log.entity';
 
 @Injectable()
 export class ReportsService {
- constructor(
-  @InjectRepository(Report)
-  private readonly reportRepository: Repository<Report>,
+  constructor(
+    @InjectRepository(Report)
+    private readonly reportRepository: Repository<Report>,
 
-  @InjectRepository(ReportAuditLog)
-  private readonly auditRepository: Repository<ReportAuditLog>,
-) {}
+    @InjectRepository(ReportAuditLog)
+    private readonly auditRepository: Repository<ReportAuditLog>,
+  ) {}
 
-async create(data: CreateReportDto) {
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  async create(data: CreateReportDto) {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const allReports = await this.reportRepository.find({
-    order: {
-      created_at: 'DESC',
-    },
-  });
+    const allReports = await this.reportRepository.find({
+      order: {
+        created_at: 'DESC',
+      },
+    });
 
-  const existingReport = allReports.find((report) => {
-    const sameCategory = String(report.category).trim().toLowerCase() === String(data.category).trim().toLowerCase();
-    const sameRegion =
-      String(report.region ?? '').trim().toLowerCase() === String(data.region ?? '').trim().toLowerCase();
-    const notRejected = report.status !== 'rejected';
+    const existingReport = allReports.find((report) => {
+      const sameCategory =
+        String(report.category).trim().toLowerCase() ===
+        String(data.category).trim().toLowerCase();
 
-    const reportCreatedAt = new Date(report.created_at);
-    const isRecent = reportCreatedAt >= oneDayAgo;
+      const sameRegion =
+        String(report.region ?? '').trim().toLowerCase() ===
+        String(data.region ?? '').trim().toLowerCase();
 
-    const latDiff = Math.abs(Number(report.latitude) - Number(data.latitude));
-    const lngDiff = Math.abs(Number(report.longitude) - Number(data.longitude));
-    const nearbyLocation = latDiff <= 0.01 && lngDiff <= 0.01;
-    return sameCategory && sameRegion && notRejected && isRecent && nearbyLocation;
-  });
+      const notRejected = report.status !== 'rejected';
 
-  const report = this.reportRepository.create({
-    ...data,
-    status: existingReport ? 'duplicate' : 'pending',
-    duplicate_of: existingReport ? existingReport.id : undefined,
-  });
+      const reportCreatedAt = new Date(report.created_at);
+      const isRecent = reportCreatedAt >= oneDayAgo;
 
-  return await this.reportRepository.save(report);
-}
+      const latDiff = Math.abs(Number(report.latitude) - Number(data.latitude));
+      const lngDiff = Math.abs(Number(report.longitude) - Number(data.longitude));
+      const nearbyLocation = latDiff <= 0.01 && lngDiff <= 0.01;
+
+      return (
+        sameCategory &&
+        sameRegion &&
+        notRejected &&
+        isRecent &&
+        nearbyLocation
+      );
+    });
+
+    const report = this.reportRepository.create({
+      ...data,
+      status: existingReport ? 'duplicate' : 'pending',
+      duplicate_of: existingReport ? existingReport.id : undefined,
+    });
+
+    const savedReport = await this.reportRepository.save(report);
+
+    return {
+      message: existingReport
+        ? 'Report created and marked as duplicate'
+        : 'Report created successfully',
+      data: savedReport,
+    };
+  }
 
   async findAll(query: QueryReportsDto) {
     const page = Number(query.page) || 1;
@@ -80,6 +103,7 @@ async create(data: CreateReportDto) {
     const [data, total] = await queryBuilder.getManyAndCount();
 
     return {
+      message: 'Reports fetched successfully',
       data,
       total,
       page,
@@ -88,41 +112,95 @@ async create(data: CreateReportDto) {
   }
 
   async findOne(id: string) {
-    return await this.reportRepository.findOne({
+    const report = await this.reportRepository.findOne({
       where: { id },
     });
+
+    if (!report) {
+      throw new NotFoundException('Report not found');
+    }
+
+    return {
+      message: 'Report fetched successfully',
+      data: report,
+    };
   }
 
   async updateStatus(
-  reportId: string,
-  status: 'verified' | 'rejected' | 'duplicate',
-  performed_by: string,
-  duplicateOf?: string,
-) {
-  const report = await this.reportRepository.findOne({
-    where: { id: reportId },
-  });
+    reportId: string,
+    status: 'verified' | 'rejected' | 'duplicate',
+    performed_by: string,
+    duplicateOf?: string,
+  ) {
+    const report = await this.reportRepository.findOne({
+      where: { id: reportId },
+    });
 
-  if (!report) {
-    throw new Error('Report not found');
+    if (!report) {
+      throw new NotFoundException('Report not found');
+    }
+
+    if (status === 'duplicate' && !duplicateOf) {
+      throw new BadRequestException(
+        'duplicateOf is required when marking a report as duplicate',
+      );
+    }
+
+    if (status === 'duplicate' && duplicateOf) {
+      const targetReport = await this.reportRepository.findOne({
+        where: { id: duplicateOf },
+      });
+
+      if (!targetReport) {
+        throw new NotFoundException('Target duplicate report not found');
+      }
+
+      if (targetReport.id === reportId) {
+        throw new BadRequestException(
+          'A report cannot be marked as duplicate of itself',
+        );
+      }
+    }
+
+    report.status = status;
+
+    if (status === 'duplicate') {
+      report.duplicate_of = duplicateOf!;
+    }
+
+    await this.reportRepository.save(report);
+
+    const audit = this.auditRepository.create({
+      report_id: reportId,
+      action: status,
+      performed_by,
+    });
+
+    await this.auditRepository.save(audit);
+
+    return {
+      message: `Report status updated to ${status}`,
+      data: report,
+    };
   }
 
-  report.status = status;
+  async getAuditLog(reportId: string) {
+    const report = await this.reportRepository.findOne({
+      where: { id: reportId },
+    });
 
-  if (status === 'duplicate' && duplicateOf) {
-    report.duplicate_of = duplicateOf;
+    if (!report) {
+      throw new NotFoundException('Report not found');
+    }
+
+    const logs = await this.auditRepository.find({
+      where: { report_id: reportId },
+      order: { performed_at: 'DESC' },
+    });
+
+    return {
+      message: 'Audit log fetched successfully',
+      data: logs,
+    };
   }
-
-  await this.reportRepository.save(report);
-
-  const audit = this.auditRepository.create({
-    report_id: reportId,
-    action: status,
-    performed_by,
-  });
-
-  await this.auditRepository.save(audit);
-
-  return report;
-}
 }

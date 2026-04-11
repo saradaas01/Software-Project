@@ -1,8 +1,16 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { QueryReportsDto } from './dto/query-reports.dto';
-import { Query } from '@nestjs/common';
 import { UpdateReportStatusDto } from './dto/update-report-status.dto';
 
 @Controller('api/v1/reports')
@@ -20,13 +28,18 @@ export class ReportsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.reportsService.findOne(id);
+  }
+
+  @Get(':id/audit-log')
+  getAuditLog(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.reportsService.getAuditLog(id);
   }
 
   @Patch(':id/approve')
   approve(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateReportStatusDto,
   ) {
     return this.reportsService.updateStatus(id, 'verified', dto.performed_by);
@@ -34,7 +47,7 @@ export class ReportsController {
 
   @Patch(':id/reject')
   reject(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateReportStatusDto,
   ) {
     return this.reportsService.updateStatus(id, 'rejected', dto.performed_by);
@@ -42,8 +55,8 @@ export class ReportsController {
 
   @Patch(':id/duplicate/:targetId')
   markDuplicate(
-    @Param('id') id: string,
-    @Param('targetId') targetId: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('targetId', new ParseUUIDPipe()) targetId: string,
     @Body() dto: UpdateReportStatusDto,
   ) {
     return this.reportsService.updateStatus(
