@@ -15,8 +15,6 @@ export class AlertsService {
     private alertRepo: Repository<Alert>,
   ) {}
 
-  // ─── Subscriptions ───────────────────────────────────────────
-
   async createSubscription(userId: number, dto: CreateSubscriptionDto) {
     const sub = this.subscriptionRepo.create({ ...dto, userId });
     return this.subscriptionRepo.save(sub);
@@ -38,8 +36,6 @@ export class AlertsService {
     return { message: 'Subscription cancelled' };
   }
 
-  // ─── Alerts ──────────────────────────────────────────────────
-
   async getUserAlerts(userId: number, page = 1, limit = 20) {
     const [data, total] = await this.alertRepo.findAndCount({
       where: { userId },
@@ -58,8 +54,6 @@ export class AlertsService {
     await this.alertRepo.update(alertId, { is_read: true });
     return { message: 'Alert marked as read' };
   }
-
-  // ─── Trigger (يُستدعى من الفيتشر الأول لما حادثة تتحقق) ──────
 
   async triggerAlertsForIncident(incident: {
     id: number;
@@ -102,8 +96,6 @@ export class AlertsService {
 
     return { triggered: alertsToCreate.length };
   }
-
-  // ─── Helper ──────────────────────────────────────────────────
 
   private isWithinRadius(
     lat1: number,
