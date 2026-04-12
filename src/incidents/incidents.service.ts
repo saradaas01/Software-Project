@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Incident } from './incident.entity';
@@ -55,5 +55,44 @@ export class IncidentsService {
 
   async getHistory(incident_id: string) {
     return await this.incidentStatusHistoryService.findByIncident(incident_id);
+  }
+
+  async verify(id: string, reason?: string) {
+    const incident = await this.findOne(id);
+    if (incident.status === 'verified') throw new BadRequestException('Incident already verified');
+    await this.incidentStatusHistoryService.create({
+      incident_id: id,
+      old_status: incident.status,
+      new_status: 'verified',
+      reason,
+    });
+    await this.incidentsRepository.update(id, { status: 'verified', verified_at: new Date() });
+    return this.findOne(id);
+  }
+
+  async close(id: string, reason?: string) {
+    const incident = await this.findOne(id);
+    if (incident.status === 'closed') throw new BadRequestException('Incident already closed');
+    await this.incidentStatusHistoryService.create({
+      incident_id: id,
+      old_status: incident.status,
+      new_status: 'closed',
+      reason,
+    });
+    await this.incidentsRepository.update(id, { status: 'closed', resolved_at: new Date() });
+    return this.findOne(id);
+  }
+
+  async resolve(id: string, reason?: string) {
+    const incident = await this.findOne(id);
+    if (incident.status === 'closed') throw new BadRequestException('Incident already resolved');
+    await this.incidentStatusHistoryService.create({
+      incident_id: id,
+      old_status: incident.status,
+      new_status: 'closed',
+      reason,
+    });
+    await this.incidentsRepository.update(id, { status: 'closed', resolved_at: new Date() });
+    return this.findOne(id);
   }
 }

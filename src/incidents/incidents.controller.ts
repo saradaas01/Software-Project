@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { IncidentsService } from './incidents.service';
 import { Incident } from './incident.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -42,6 +42,27 @@ export class IncidentsController {
   @Roles('admin', 'moderator')
   update(@Param('id') id: string, @Body() dto: Partial<Incident>) {
     return this.incidentsService.update(id, dto);
+  }
+
+  @Patch(':id/verify')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'moderator')
+  verify(@Param('id') id: string, @Body('reason') reason?: string) {
+    return this.incidentsService.verify(id, reason);
+  }
+
+  @Patch(':id/close')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'moderator')
+  close(@Param('id') id: string, @Body('reason') reason?: string) {
+    return this.incidentsService.close(id, reason);
+  }
+
+  @Patch(':id/resolve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'moderator')
+  resolve(@Param('id') id: string, @Body('reason') reason?: string) {
+    return this.incidentsService.resolve(id, reason);
   }
 
   @Delete(':id')
