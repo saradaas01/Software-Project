@@ -24,6 +24,11 @@ export class CheckpointsController {
     return this.checkpointsService.findOne(id);
   }
 
+  @Get(':id/history')
+  getHistory(@Param('id') id: string) {
+    return this.checkpointsService.getHistory(id);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'moderator')
