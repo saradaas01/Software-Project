@@ -1,53 +1,52 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { IncidentsService } from './incidents.service';
-import { Incident } from './incident.entity';
+import { CheckpointsService } from './checkpoints.service';
+import { Checkpoint } from './checkpoint.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-@Controller('api/v1/incidents')
-export class IncidentsController {
-  constructor(private readonly incidentsService: IncidentsService) {}
+@Controller('api/v1/checkpoints')
+export class CheckpointsController {
+  constructor(private readonly checkpointsService: CheckpointsService) {}
 
   @Get()
   findAll(
+    @Query('region') region?: string,
     @Query('type') type?: string,
-    @Query('severity') severity?: string,
-    @Query('status') status?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.incidentsService.findAll(type, severity, status, page, limit);
+    return this.checkpointsService.findAll(region, type, page, limit);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.incidentsService.findOne(id);
+    return this.checkpointsService.findOne(id);
   }
 
   @Get(':id/history')
   getHistory(@Param('id') id: string) {
-    return this.incidentsService.getHistory(id);
+    return this.checkpointsService.getHistory(id);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'moderator')
-  create(@Body() dto: Partial<Incident>) {
-    return this.incidentsService.create(dto);
+  create(@Body() dto: Partial<Checkpoint>) {
+    return this.checkpointsService.create(dto);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'moderator')
-  update(@Param('id') id: string, @Body() dto: Partial<Incident>) {
-    return this.incidentsService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: Partial<Checkpoint>) {
+    return this.checkpointsService.update(id, dto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   remove(@Param('id') id: string) {
-    return this.incidentsService.remove(id);
+    return this.checkpointsService.remove(id);
   }
 }

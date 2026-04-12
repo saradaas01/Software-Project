@@ -7,7 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { IncidentsModule } from './incidents/incidents.module';
 import { AlertsModule } from './alerts/alerts.module';
-
+import { ReportsModule } from './reports/reports.module';
+import { ReportVotesModule } from './report-votes/report-votes.module';
 import { User } from './users/user.entity';
 import { RefreshToken } from './auth/refresh-token.entity';
 import { Incident } from './incidents/incident.entity';
@@ -20,6 +21,11 @@ import { ReportAuditLog } from './report-audit-log/report-audit-log.entity';
 import { AlertSubscription } from './alert-subscriptions/alert-subscription.entity';
 import { AlertRecord } from './alert-records/alert-record.entity';
 import { RouteCache } from './route-cache/route-cache.entity';
+import { CheckpointsModule } from './checkpoints/checkpoints.module';
+import { IncidentStatusHistoryModule } from './incident-status-history/incident-status-history.module';
+import { CheckpointStatusHistoryModule } from './checkpoint-status-history/checkpoint-status-history.module';
+import { RoutesModule } from './routes/routes.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 @Module({
   imports: [
@@ -48,8 +54,8 @@ import { RouteCache } from './route-cache/route-cache.entity';
           AlertSubscription,
           AlertRecord,
           RouteCache,
- Subscription,  
-  Alert, 
+          Subscription,
+          Alert,
         ],
       }),
     }),
@@ -57,6 +63,13 @@ import { RouteCache } from './route-cache/route-cache.entity';
     UsersModule,
     IncidentsModule,
     AlertsModule,
+    ReportsModule,
+    ReportVotesModule,
+    CheckpointsModule,
+    IncidentStatusHistoryModule,
+    CheckpointStatusHistoryModule,
+    RoutesModule,
+    IntegrationsModule,
   ],
 })
 export class AppModule {}
