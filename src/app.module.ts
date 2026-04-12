@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { Subscription } from './alerts/entities/subscription.entity';
+import { Alert } from './alerts/entities/alert.entity';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { IncidentsModule } from './incidents/incidents.module';
+import { AlertsModule } from './alerts/alerts.module';
 
 import { User } from './users/user.entity';
 import { RefreshToken } from './auth/refresh-token.entity';
@@ -46,12 +48,15 @@ import { RouteCache } from './route-cache/route-cache.entity';
           AlertSubscription,
           AlertRecord,
           RouteCache,
+ Subscription,  
+  Alert, 
         ],
       }),
     }),
     AuthModule,
     UsersModule,
     IncidentsModule,
+    AlertsModule,
   ],
 })
 export class AppModule {}

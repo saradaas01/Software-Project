@@ -55,7 +55,7 @@ export class AuthService {
 
     private async generateTokens(user: User) {
         const payload = { sub: user.id, email: user.email, role: user.role };
-        const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '24h' });
         const refreshToken = require('crypto').randomBytes(40).toString('hex');
 
         const token_hash = await bcrypt.hash(refreshToken, 10);
