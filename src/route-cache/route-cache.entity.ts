@@ -20,6 +20,9 @@ export class RouteCache {
   @Column({ default: false })
   avoid_checkpoints: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  avoid_areas_key: string;
+
   @Column({ type: 'integer', nullable: true })
   distance_meters: number;
 
