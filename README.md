@@ -139,6 +139,14 @@ Wasel Palestine is a backend API platform designed to help Palestinians navigate
 
 ---
 
+## API Documentation (API-Dog)
+
+All API endpoints are fully documented using API-Dog, including endpoint descriptions, authentication flows, request and response schemas, and error formats.
+
+**View Full API Documentation:** [Wasel Palestine API - API-Dog](https://vhumipc85u.apidog.io/)
+
+---
+
 ## External API Integrations
 
 ### OpenRouteService (OSM)
@@ -190,11 +198,12 @@ Automated load testing was performed using k6 across the following scenarios:
 - Timeout handling (5000ms) — prevents long waiting times
 - Parallel API execution using Promise.all() — reduces total request processing time
 
- **Before/After Comparison:**
+**Before/After Comparison:**
 - Before caching: every route request called external API → avg 199ms with high failure rate
 - After caching: repeated requests served locally → significantly reduced external API dependency and improved response time for cached routes
 - Before Promise.all(): route and weather APIs called sequentially → higher total latency
 - After Promise.all(): both APIs called in parallel → reduced processing time
+
 ---
 
 ## Running the Project
