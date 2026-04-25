@@ -3,38 +3,38 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeor
 @Entity('route_cache')
 export class RouteCache {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'decimal', precision: 9, scale: 6 })
-  origin_lat: number;
+  origin_lat!: number;
 
   @Column({ type: 'decimal', precision: 9, scale: 6 })
-  origin_lng: number;
+  origin_lng!: number;
 
   @Column({ type: 'decimal', precision: 9, scale: 6 })
-  dest_lat: number;
+  dest_lat!: number;
 
   @Column({ type: 'decimal', precision: 9, scale: 6 })
-  dest_lng: number;
+  dest_lng!: number;
 
   @Column({ default: false })
-  avoid_checkpoints: boolean;
+  avoid_checkpoints!: boolean;
 
   @Column({ type: 'text', nullable: true })
-  avoid_areas_key: string;
+  avoid_areas_key!: string;
 
   @Column({ type: 'integer', nullable: true })
-  distance_meters: number;
+  distance_meters!: number;
 
   @Column({ type: 'integer', nullable: true })
-  duration_seconds: number;
+  duration_seconds!: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata: object;
+  metadata!: object;
 
   @Column({ type: 'timestamp', nullable: true })
-  expires_at: Date;
+  expires_at!: Date;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 }

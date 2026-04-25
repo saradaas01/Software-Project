@@ -11,19 +11,19 @@ import {
 export class EstimateRouteDto {
     @Transform(({ value }) => parseFloat(value))
     @IsLatitude()
-    origin_lat: number;
+    origin_lat!: number;
 
     @Transform(({ value }) => parseFloat(value))
     @IsLongitude()
-    origin_lng: number;
+    origin_lng!: number;
 
     @Transform(({ value }) => parseFloat(value))
     @IsLatitude()
-    dest_lat: number;
+    dest_lat!: number;
 
     @Transform(({ value }) => parseFloat(value))
     @IsLongitude()
-    dest_lng: number;
+    dest_lng!: number;
 
     @IsOptional()
     @Transform(({ value }) => value === 'true')

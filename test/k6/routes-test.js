@@ -11,8 +11,7 @@ export const options = {
 };
 
 const BASE_URL = 'http://localhost:3001';
-const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNWMzNzgzYS02MDU5LTQ2NTYtYmE2Mi1hMjQ4YzQ4ZDQ0OWYiLCJlbWFpbCI6InRlc3QyQHRlc3QuY29tIiwicm9sZSI6ImNpdGl6ZW4iLCJpYXQiOjE3NzY1MjA0NDUsImV4cCI6MTc3NjYwNjg0NX0.-4fGPiu5TKOkE4Q8PuyJVT-cKVG2-XtCKpV8meWjQC4';
-
+const TOKEN = __ENV.TOKEN;
 function buildUrl(i) {
     const originLat = i % 2 === 0 ? 32.179 : 32.1791;
 
