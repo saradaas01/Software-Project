@@ -33,36 +33,12 @@ Wasel Palestine is a backend API platform designed to help Palestinians navigate
 ---
 
 ## Architecture Diagram
-┌─────────────────────────────────────────────────────┐
-│                    Client (Mobile/Web)               │
-└─────────────────────┬───────────────────────────────┘
-│ HTTP Requests
-▼
-┌─────────────────────────────────────────────────────┐
-│                  NestJS API Server                   │
-│                  Port: 3001                          │
-│                                                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
-│  │   Auth   │  │Incidents │  │   Checkpoints    │  │
-│  │ /auth    │  │/incidents│  │  /checkpoints    │  │
-│  └──────────┘  └──────────┘  └──────────────────┘  │
-│                                                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
-│  │ Reports  │  │  Routes  │  │     Alerts       │  │
-│  │/reports  │  │ /routes  │  │    /alerts       │  │
-│  └──────────┘  └──────────┘  └──────────────────┘  │
-└─────────────┬───────────────────────┬───────────────┘
-│                       │
-▼                       ▼
-┌─────────────────────┐   ┌──────────────────────────┐
-│   PostgreSQL DB      │   │    External APIs         │
-│   wasel_db           │   │  - OpenRouteService      │
-│                      │   │  - OpenWeatherMap        │
-└─────────────────────┘   └──────────────────────────┘
+![Architecture Diagram](assets/architecture_diagram.png)
 
 ---
 
 ## Database Schema (ERD)
+![Database ERD](assets/ERD.png)
 
 ### Authentication
 | Table | Description |
@@ -85,9 +61,9 @@ Wasel Palestine is a backend API platform designed to help Palestinians navigate
 ### Reports
 | Table | Description |
 |-------|-------------|
-| reports | Crowdsourced reports from citizens |
-| report_votes | Community voting on reports |
-| report_audit_log | Audit trail for report moderation |
+| reports | Crowdsourced reports from citizens with confidence scoring |
+| report_votes | Community voting to calculate confidence score |
+| report_audit_log | Audit trail for all moderation actions |
 
 ### Alerts
 | Table | Description |
@@ -98,7 +74,7 @@ Wasel Palestine is a backend API platform designed to help Palestinians navigate
 ### Routes
 | Table | Description |
 |-------|-------------|
-| route_cache | Cached route estimations |
+| route_cache | Cached route estimations (30 min expiry) |
 
 ---
 
@@ -143,7 +119,9 @@ Wasel Palestine is a backend API platform designed to help Palestinians navigate
 | GET | /api/v1/reports/:id/audit-log | Get report audit log | Required |
 | PATCH | /api/v1/reports/:id/approve | Approve report | Admin/Moderator |
 | PATCH | /api/v1/reports/:id/reject | Reject report | Admin/Moderator |
-| POST | /api/v1/reports/:id/vote | Vote on report | Required |
+| PATCH | /api/v1/reports/:id/duplicate/:targetId | Mark report as duplicate | Admin/Moderator |
+| POST | /api/v1/reports/:id/vote | Vote on report (updates confidence score) | Required |
+| GET | /api/v1/reports/votes/all | Get all votes | Required |
 
 ### Alerts
 | Method | Endpoint | Description | Auth |
@@ -169,6 +147,7 @@ Wasel Palestine is a backend API platform designed to help Palestinians navigate
 - **Returns:** distance (meters), duration (seconds), route coordinates
 - **Timeout:** 5 seconds
 - **Caching:** Results cached for 30 minutes to reduce external API calls
+- **Supported constraints:** avoid_checkpoints, avoid_areas
 - **Error handling:** Returns 503 if unavailable, 404 if no route found
 
 ### OpenWeatherMap
@@ -188,31 +167,34 @@ All API endpoints were tested manually using Postman during development to verif
 Automated load testing was performed using k6 across the following scenarios:
 - **Routes Test** — focuses on route estimation endpoint
 - **Read-Heavy** — simulates high read traffic on listing endpoints
-- **Write-Heavy** — simulates concurrent write operations
-- **Spike Test** — tests system behavior under sudden traffic increases
-- **Soak Test** — extended duration test to detect memory leaks
+- **Write-Heavy** — simulates concurrent write operations (report submissions)
+- **Spike Test** — tests system behavior under sudden traffic increases (max 20 VUs)
+- **Soak Test** — extended 2-minute test to detect memory leaks and degradation
 - **Full-System Test** — simulates mixed real-world usage
 
 ---
 
 ## Performance Testing Results
 
-| Test Type | Avg Response Time | p95 Latency | Failure Rate |
-|-----------|-------------------|-------------|--------------|
-| Routes Test | 199 ms | 440 ms | 21.56% |
-| Read-Heavy | 93 ms | 388 ms | 20% |
-| Write-Heavy | 120 ms | 391 ms | 0% |
-| Spike Test | 171 ms | 727 ms | 25% |
-| Soak Test | 104 ms | 326 ms | 25% |
-| Full-System | 89 ms | 338 ms | 12.24% |
+![Performance Metrics](assets/performance_metrics.png)
 
-**Identified Bottleneck:** External routing API (OpenRouteService) caused most failures due to rate limiting and timeouts — internal system remained stable throughout all tests.
+**Identified Bottleneck:** External routing API (OpenRouteService) caused most failures due to rate limiting and timeouts. Internal system remained stable throughout all tests with 0% failure rate on write operations.
+
+**Root Causes:**
+- External API rate limiting
+- Network latency to external service
+- External service timeout
 
 **Optimizations Applied:**
 - Route caching (30 minutes) — reduces repeated external API calls
 - Timeout handling (5000ms) — prevents long waiting times
 - Parallel API execution using Promise.all() — reduces total request processing time
 
+ **Before/After Comparison:**
+- Before caching: every route request called external API → avg 199ms with high failure rate
+- After caching: repeated requests served locally → significantly reduced external API dependency and improved response time for cached routes
+- Before Promise.all(): route and weather APIs called sequentially → higher total latency
+- After Promise.all(): both APIs called in parallel → reduced processing time
 ---
 
 ## Running the Project
